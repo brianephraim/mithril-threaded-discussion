@@ -1,115 +1,6 @@
 var mId = 0;
 
 
-var discussion = m.request({method: "GET", url: "discussion.json"});
-discussion.then(function(response){
-    if(response && response.topics){
-        var topics = response.topics;
-        for(var i=0,l=topics.length;i<l;i++){
-            var topic = topics[i];
-            var responses = topic.responses ? topic.responses : [];
-            var responseDict = {};
-            for(var j=0,m=responses.length;j<m;j++){
-                var response = responses[j];
-                var id = response.id;
-                responseDict[id] = response;
-                var parentid = response.parentid;
-                if(typeof responseDict[parentid] !== 'undefined'){
-                    responseDict[parentid].responses = responseDict[parentid].responses ? responseDict[parentid].responses : [];
-                    responseDict[parentid].responses.push(response);
-                    responses.splice(j,1);
-                    m--;
-                    j--;
-                }
-            }
-        }
-        // console.log(topics)
-        var str = JSON.stringify(topics, null, 2);
-        console.log(str)
-    }
-    
-})
-console.log(discussion())
-
-var Controller = function(){
-    this.list = [];
-    this.description = m.prop('');
-    this.add(null,'aaa');
-    this.add(null,'bbb');
-};
-Controller.prototype.add = function(event,text){
-    var description = text ? text : this.description();
-    if (description) {
-        var newItem = new Item({description: description});
-        this.list.push(newItem);
-        this.description("");
-    }
-};
-Controller.prototype.remove = function(event,item){
-    for(var i=0,l=this.list.length;i<l;i++){
-        if(this.list[i] === item){
-            this.list.splice(i, 1);
-            break;
-        }
-    }
-};
-
-var Item = function(data){
-    this.mId = 'mId' + mId++;
-    this.description = m.prop(data.description);
-    this.done = m.prop(false);
-};
-
-var MyComponent = {
-    controller: function(args) {
-        return {greeting: args.message}
-    },
-    view: function(ctrl) {
-        return m("h2", ctrl.greeting)
-    }
-};
-
-
-var topicComponent = {
-    controller: function(args) {
-        return {greeting: args.message}
-    },
-    view: function(ctrl) {
-        return m("h2", ctrl.greeting)
-    }
-}
-
-//here's the view
-var view = function(controller) {
-    return m("div", [
-        m.component(topicComponent, {message: "Hello"}),
-        m.component(MyComponent, {message: "Hello"}),
-        m("input", {onchange: m.withAttr("value", controller.description), value: controller.description()}),
-        m("button", {onclick: function(){controller.add()}}, "Add"),
-        m("table", [
-            controller.list.map(function(item, index) {
-                return m("tr", {config: fadesIn},[
-                    m("td", [
-                        m("input[type=checkbox]", {onclick: m.withAttr("checked", item.done), checked: item.done()})
-                    ]),
-                    m("td", {style: {textDecoration: item.done() ? "line-through" : "none"}}, item.description()),
-                    m("td", {
-                        'id': item.mId + 'delete', //hack to override diffing fade out item splice bug.
-                        onclick: function(e){
-                            fadesOut(e,function(){
-                                controller.remove(e,item)
-                            })
-                        }
-                    }, "delete"),
-                ])
-            })
-        ]),
-        m("#container", {config: fadesIn}, [
-            m("a[href='/foo']", {config: fadesOutPage}, "go to foo")
-        ])
-    ])
-};
-
 var view2 = function(controller) {
     return m("html", [
         m("body", [
@@ -189,14 +80,136 @@ function slideOut( el, callback ){
 
 var slidingPage = animator( slideIn, slideOut );
 
+
+//-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+var fetch = function(){
+    return m.request({method: "GET", url: "discussion.json"})
+    .then(function(response){
+        if(response && response.topics){
+            var topics = response.topics;
+            for(var i=0,l=topics.length;i<l;i++){
+                var topic = topics[i];
+                var responses = topic.responses ? topic.responses : [];
+                var responseDict = {};
+                for(var j=0,m=responses.length;j<m;j++){
+                    var response = responses[j];
+                    var id = response.id;
+                    responseDict[id] = response;
+                    var parentid = response.parentid;
+                    if(typeof responseDict[parentid] !== 'undefined'){
+                        responseDict[parentid].responses = responseDict[parentid].responses ? responseDict[parentid].responses : [];
+                        responseDict[parentid].responses.push(response);
+                        responses.splice(j,1);
+                        m--;
+                        j--;
+                    }
+                }
+            }
+            // console.log(topics)
+            // var str = JSON.stringify(topics, null, 2);
+            // console.log(str);
+            return topics;
+        } else {
+            return response;
+        }
+    });
+};
+
+var topicPage = {
+    controller:function(){
+        var self= this;
+        this.description = m.prop('');
+        this.listx = fetch();
+        
+
+        this.add = function(event,text){
+            var description = text ? text : self.description();
+            var list = self.listx();
+            description = 'asdf'
+            if (description) {
+                list.push({topictitle: description});
+                self.description("");
+                // m.redraw(true)
+                // m.startComputation()
+                //     // callback()
+                // m.endComputation()
+            }
+        };
+    },
+    view:function(controller) {
+
+        var list = m.component(listComp, {parent: controller});
+
+        return m("div", [
+            m("input", {onchange: m.withAttr("value", controller.description), value: controller.description()}),
+            m("button", {onclick: function(){controller.add()}}, "Add"),
+            m("div",'---'),
+            m.component(listComp, controller),
+            m("div",'---'),
+            
+            m("#container", {config: fadesIn}, [
+                m("a[href='/foo']", {config: fadesOutPage}, "go to foo")
+            ])
+        ])
+    }
+};
+
+var listComp = {
+    controller: function(parentCtrl){
+        var self = this;
+        console.log(parentCtrl)
+        this.asdf = "qwer";
+        this.listx = parentCtrl.listx;
+        this.description = parentCtrl.description;
+
+        this.remove = function(event,item){
+            var list = self.listx();
+            for(var i=0,l=list.length;i<l;i++){
+                if(list[i] === item){
+                    list.splice(i, 1);
+                    break;
+                }
+            }
+        };
+
+        
+    },
+    view: function(ctrl) {
+        console.log(ctrl.listx())
+        return m("div", ctrl.listx().map(function(item, index){
+            return [
+                m('div',[
+                    m("span", {
+                        // 'id': item.mId + 'delete', //hack to override diffing fade out item splice bug.
+                        onclick: function(e){
+                            fadesOut(e,function(){
+                                ctrl.remove(e,item)
+                            })
+                        }
+                    }, "delete ---- "),
+                    m("span",item.topictitle)
+                ])
+            ]
+
+        }))
+    }
+};
+
+
+
+
 //initialize the application
 $(function(){
     // m.mount(document.body, {controller:Controller, view: view});
     m.route.mode = "hash";
     m.route($('#app')[0], "/", {
-        "/": slidingPage({controller:Controller, view: view}),
-        "/foo": slidingPage({controller:Controller, view: view2}),
-        "/dashboard": slidingPage({controller:Controller, view: view}),
+        "/": (topicPage),
+        // "/": slidingPage({controller: new Controller().controller, view: view}),
+        // "/foo": slidingPage({controller:newController, view: view2}),
+        // "/dashboard": slidingPage({controller:Controller, view: view}),
     });
     // m.route($('#app2')[0], "/", {
     //     "/foo": {controller:Controller, view: view2},
