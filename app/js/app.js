@@ -1,16 +1,3 @@
-var mId = 0;
-
-
-
-var view2 = function(controller) {
-    return m("html", [
-        m("body", [
-            m("input", {onchange: m.withAttr("value", controller.description), value: controller.description()}),
-            m("button", {onclick: function(){controller.add()}}, "asdfasdfasdfas")
-        ])
-    ]);
-};
-
 var discussionService = (function(){
     var Service = function(){
         this.discussionId = 0;
@@ -22,6 +9,9 @@ var discussionService = (function(){
         return m.request({method: "GET", url: "discussion.json"})
         .then(function(response){
             if(response && response.topics){
+
+                // parse the json from the server
+                // makes nested responses via parentid
                 var topics = response.topics;
                 for(var i=0,l=topics.length;i<l;i++){
                     var topic = topics[i];
@@ -42,9 +32,7 @@ var discussionService = (function(){
                         }
                     }
                 }
-                // console.log(topics)
-                // var str = JSON.stringify(topics, null, 2);
-                // console.log(str);
+
                 this.hasData = true;
                 return topics;
             } else {
@@ -81,49 +69,24 @@ var topicPageComp = {
 
         return m("div", {class:['page topicPageComp'].join(' ')}, [
             m("div",{class:"pageHeader"},[
-                m("input", {onchange: m.withAttr("value", controller.description), value: controller.description()}),
-                m("button", {onclick: function(){controller.add()}}, "Add"),
+                m("h1", "Discussion")
             ]),
             m.component(topicListComp, controller),
-            
-            m("#container", {config: fadesIn}, [
-                m("a[href='/foo']", {config: fadesOutPage}, "go to foo")
-            ])
         ])
     }
 };
+
 var topicListComp = {
     controller: function(parentCtrl){
         var self = this;
         this.listx = parentCtrl.listx;
         this.description = parentCtrl.description;
-
-        this.remove = function(event,item){
-            m.redraw.strategy('all');//all,diff,none
-            var list = self.listx();
-            for(var i=0,l=list.length;i<l;i++){
-                if(list[i] === item){
-                    list.splice(i, 1);
-                    break;
-                }
-            }
-        };
     },
     view: function(ctrl) {
         return m("div",{'class':'topicList'}, ctrl.listx().map(function(item, index){
             return [
                 m('div',{'class':'topicContainer'},[
-                    m('div',{'class':'topicHeader'},[
-                        m("span", {
-                            // 'id': item.mId + 'delete', //hack to override diffing fade out item splice bug.
-                            onclick: function(e){
-                                fadesOut(e,function(){
-                                    ctrl.remove(e,item)
-                                })
-                            }
-                        }, "delete ---- "),
-                        m("span",item.topictitle)
-                    ]),
+                    m('div',{'class':'topicHeader'},item.topictitle),
                     m.component(responseListComp, item.responses),
                 ])
             ]
@@ -131,8 +94,6 @@ var topicListComp = {
         }))
     }
 };
-
-
 
 var responseListComp = {
     controller: function(responses){
@@ -181,7 +142,7 @@ var responseContainerComp = {
                                         id:++discussionService.discussionId,
                                         parentid:ctrl.item.id,
                                         posttext: '<p>'+$textarea.val()+'</p>',
-                                        fresh:true
+                                        fresh:true //this is used for animating new items
                                     })
 
                                     m.redraw(true)
@@ -218,12 +179,12 @@ var responseContainerComp = {
             inner.push(m( 'div', {'class':'showHide noResponses'}, 'no responses'))
         }
 
-
         if(ctrl.item.responses && ctrl.showResponses){
             inner.push(m.component(responseListComp, ctrl.item.responses));
         }
 
         return  m('div', {
+            // Do an animation when a new item is posted.
             'config':function(el, isInitialized,context,mObj){
                 var item = mObj.controllers[0].item;
 
@@ -330,14 +291,4 @@ var responseItemComp = {
 //initialize the application
 $(function(){
     m.mount(document.body, topicPageComp);
-    m.route.mode = "hash";
-    m.route($('#app')[0], "/", {
-        "/": (topicPageComp),
-        // "/": slidingPage({controller: new Controller().controller, view: view}),
-        // "/foo": slidingPage({controller:newController, view: view2}),
-        // "/dashboard": slidingPage({controller:Controller, view: view}),
-    });
-    // m.route($('#app2')[0], "/", {
-    //     "/foo": {controller:Controller, view: view2},
-    // });
 });

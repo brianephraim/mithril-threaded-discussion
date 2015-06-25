@@ -1,4 +1,14 @@
 @import url(http://fonts.googleapis.com/css?family=Open+Sans:600,400);
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  /* 1 */
+  display: table;
+  /* 2 */ }
+
+.clearfix:after {
+  clear: both; }
+
 textarea, .textarea {
   overflow: auto;
   /* 1 */
@@ -43,7 +53,9 @@ p {
   margin: 0; }
 
 .pageHeader {
-  border-bottom: 2px solid #2B3A42; }
+  border-bottom: 2px solid #2B3A42;
+  text-align: center;
+  color: #FF530D; }
 
 body, html {
   /*background: $light1;*/
@@ -95,9 +107,7 @@ body, html {
   border: none;
   color: white;
   position: relative;
-  padding: 15px;
-  /*top:$indent;*/
-  /*padding:0;*/ }
+  padding: 15px; }
 
 .responseItem_indent_0 {
   border-top: none; }
@@ -124,32 +134,12 @@ body, html {
   line-height: 24px; }
 
 .indent {
-  padding-left: 30px;
-  /*padding-left:$indent * 6 + 7;*/
-  /*padding-top:$indent;*/ }
+  padding-left: 30px; }
 
 .indent_0 {
   padding-left: 0; }
 
 .indent_1 {
-  /*width:80%;*/
-  /*margin:0 auto;*/
   padding-left: 30px; }
-
-/*.indent_2{
-   padding-left:$indent * 2;
-}
-.indent_3{
-    padding-left:$indent * 3;
-}
-.indent_4{
-    padding-left:$indent * 4;
-}
-.indent_5{
-    padding-left:$indent * 5;
-}
-.indent_6{
-    padding-left:$indent * 6;
-}*/
 
 /*# sourceMappingURL=sass-generated.css.map */
