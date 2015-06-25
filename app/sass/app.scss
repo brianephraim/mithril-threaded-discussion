@@ -1,0 +1,186 @@
+//textarea reset
+textarea, .textarea {
+    overflow: auto;
+    /* 1 */
+    vertical-align: top;
+    /* 2 */
+    display: block;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    resize: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+textarea:focus::-webkit-input-placeholder, .textarea:focus::-webkit-input-placeholder {
+  font-size: 0px;
+}
+textarea:focus:-moz-placeholder, .textarea:focus:-moz-placeholder {
+  font-size: 0px;
+}
+textarea:focus::-moz-placeholder, .textarea:focus::-moz-placeholder {
+  font-size: 0px;
+}
+textarea:focus:-ms-input-placeholder, .textarea:focus:-ms-input-placeholder {
+  font-size: 0px;
+}
+textarea::-webkit-input-placeholder, .textarea::-webkit-input-placeholder {
+  font-style: italic;
+}
+textarea:-moz-placeholder, .textarea:-moz-placeholder {
+  font-style: italic;
+}
+textarea::-moz-placeholder, .textarea::-moz-placeholder {
+  font-style: italic;
+}
+textarea:-ms-input-placeholder, .textarea:-ms-input-placeholder {
+  font-style: italic;
+}
+
+
+
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:600,400);
+
+
+p{
+    margin:0;
+
+}
+
+
+
+
+// https://color.adobe.com/Birdfolio-Blues-color-theme-1945976
+$red: #FF530D;
+$light1: #EFEFEF;
+$light2: #BDD4DE;
+$light3: #96A8B0;
+$grey1: #3F5765;
+$grey2: #2B3A42;
+
+$indent: 15px;
+
+
+.pageHeader{
+    border-bottom:2px solid $grey2;
+}
+
+body,html {
+    /*background: $light1;*/
+    background: white;
+    color: $grey1;
+    font-family: 'Open Sans', sans-serif;
+    font-size:15px;
+}
+
+.topicList{
+    width:80%;
+    margin:0 auto;
+}
+.topicHeader{
+    padding: $indent;
+    font-size:20px;
+}
+
+.topicContainer{
+    border-bottom:3px solid $grey1;
+}
+
+.responseContainer{
+}
+.responseItem{
+    border-top:3px solid $light2;
+    padding: $indent;
+}
+.responseBody p {
+    padding-bottom: $indent;
+}
+
+
+
+.inputWrap{
+    overflow:hidden;
+}
+.addResponseForm{
+    /*background: $light1;*/
+}
+.addResponseInput{
+    border-top:1px solid $light3;
+    background: transparent;
+    min-width:100%;
+    padding: $indent;
+    font-size:14px;
+    color:$light3;
+
+}
+.addResponseSubmitButton{
+    font-size:14px;
+    float:right;
+    background: $light3;
+    border: none;
+    color:white;
+    position:relative;
+    padding:$indent;
+    /*top:$indent;*/
+    /*padding:0;*/
+    //=== === === === === === === === === === === === === === === === === ===  0 0 00 0 00 0 post
+}
+
+
+
+.responseItem_indent_0{
+    border-top:none;
+}
+.responseHeader{
+    padding-bottom:$indent;
+}
+.showHide{
+    color: $light3;
+    font-size:12px;
+    cursor: pointer;
+    padding: 0 $indent $indent ($indent * 2);
+}
+.noResponses{
+    color: $light1;
+}
+.author{
+    font-weight: 600;
+}
+.ago{
+    float:right;
+    color: $light3;
+    font-size: 12px;
+    line-height: 24px;
+}
+
+.indent{
+    padding-left:$indent * 2;
+    /*padding-left:$indent * 6 + 7;*/
+    /*padding-top:$indent;*/
+}
+.indent_0{
+    padding-left:0;
+}
+.indent_1{
+    /*width:80%;*/
+    /*margin:0 auto;*/
+    padding-left:$indent * 2;
+}
+/*.indent_2{
+   padding-left:$indent * 2;
+}
+.indent_3{
+    padding-left:$indent * 3;
+}
+.indent_4{
+    padding-left:$indent * 4;
+}
+.indent_5{
+    padding-left:$indent * 5;
+}
+.indent_6{
+    padding-left:$indent * 6;
+}*/

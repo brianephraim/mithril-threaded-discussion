@@ -1,33 +1,35 @@
 module.exports = function(grunt) {
 
   grunt.initConfig({
-    jshint: {
-      files: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js'],
-      options: {
-        globals: {
-          jQuery: true
-        }
-      }
-    },
-    connect: {
-      server: {
+    sass: {
         options: {
-          keepalive:true,
-          port: 8000,
-          base: {
-            path: 'app',
-            // options: {
-            //   index: 'somedoc.html',
-            //   maxAge: 300000
-            // }
-          }
+            sourceMap: true
+        },
+        dist: {
+            files: {
+                './app/css/sass-generated.css': './app/sass/app.scss'
+            }
         }
-      }
-    }
+    },
+    libsass: {
+        myTarget:{
+            src: './app/sass/app.scss',
+            dest: './app/css/sass-generated.css',
+        }
+    },
+    watch: {
+      css: {
+        files: './app/sass/app.scss',
+        tasks: ['sass'],
+        // options: {
+        //   livereload: true,
+        // },
+      },
+    },
   });
 
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-sass');
 
   grunt.registerTask('default', ['jshint']);
 

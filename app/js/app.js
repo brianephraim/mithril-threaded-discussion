@@ -1,5 +1,53 @@
 var mId = 0;
 
+var appendDOM = function( dom ){
+  return function( el, init ){
+    if( !init ) el.innerHTML = ( dom );
+  };
+};
+
+var dateToAgoString = function(datex) {//datex can be date obj or string/number seconds ago.
+    if(typeof datex !== 'object'){
+        datex = +datex;
+        var seconds = datex;
+        var dateNow = new Date();
+        var dateSecondsAgo = new Date(dateNow.getTime() - seconds*1000);
+        datex = dateSecondsAgo;
+    }
+    var strings = [];
+    var delta = (Math.abs(new Date() - datex) / 1000);
+
+    // calculate (and subtract) whole days
+    var days = Math.floor(delta / 86400);
+    delta -= days * 86400;
+    if (days > 0) {
+        strings.push(days + ' days,')
+    }
+
+    // calculate (and subtract) whole hours
+    var hours = Math.floor(delta / 3600) % 24;
+    delta -= hours * 3600;
+    if (hours > 0) {
+        strings.push(hours + 'h')
+    }
+
+    // calculate (and subtract) whole minutes
+    var minutes = Math.floor(delta / 60) % 60;
+    delta -= minutes * 60;
+    if (minutes > 0) {
+        strings.push(minutes + 'm')
+    }
+
+    if (strings.length === 0) {
+        strings.push(1 + 'm')
+    }
+
+    var result = strings.join(' ') + ' ago';
+    return result;
+};
+
+
+
 
 var view2 = function(controller) {
     return m("html", [
@@ -10,80 +58,10 @@ var view2 = function(controller) {
     ]);
 };
 
-//helper
-var fadesOutPage = function(element, isInitialized, context) {
-    if (!isInitialized) {
-        element.onclick = function(e) {
-            e.preventDefault();
-            $.Velocity(document.getElementById("container"), {opacity: 0}, {
-                complete: function() {
-                    m.route(element.getAttribute("href"))
-                }
-            })
-        }
-    }
-}
-
-
-//view helpers
-var fadesIn = function(element, isInitialized, context) {
-    if (!isInitialized) {
-        element.style.opacity = 0
-        $.Velocity(element, {opacity: 1})
-    }
-}
-var fadesOut = function(e,callback) {
-    // return function(e) {
-        //don't redraw yet
-        m.redraw.strategy("none")
-
-        $.Velocity(e.target, {opacity: 0}, {
-            complete: function() {
-                //now that the animation finished, redraw
-                m.startComputation()
-                callback()
-                m.endComputation()
-            }
-        })
-    // }
-}
-
-// Animation for sliding in. This is a bit basic, but you could do anything.
-function slideIn( el, callback ){
-    el.style.left       = '-100%';
-    el.style.top        = '0';
-    el.style.position   = 'fixed';
-    el.style.transition = 'left .6s ease-in-out';
-
-    setTimeout( function transit(){
-        el.style.left = '0%';
-    } );
-    
-    el.addEventListener( 'transitionend', callback, false );
-}
-
-// Slide out.
-function slideOut( el, callback ){
-    el.style.left       = '0%';
-    el.style.top        = '0';
-    el.style.position   = 'fixed';
-    el.style.transition = 'left .6s ease-in-out';
-
-    setTimeout( function transit(){
-        el.style.left = '100%';
-    } );
-
-    // Remember to fire the callback when the animation is finished.
-    el.addEventListener( 'transitionend', callback, false );
-}
-
-var slidingPage = animator( slideIn, slideOut );
-
-
 //-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
+var discussionId = 0;
 var fetch = function(){
     return m.request({method: "GET", url: "discussion.json"})
     .then(function(response){
@@ -94,6 +72,7 @@ var fetch = function(){
                 var responses = topic.responses ? topic.responses : [];
                 var responseDict = {};
                 for(var j=0,m=responses.length;j<m;j++){
+                    discussionId = responses[j].id > discussionId ? responses[j].id : discussionId;
                     var response = responses[j];
                     var id = response.id;
                     responseDict[id] = response;
@@ -117,7 +96,7 @@ var fetch = function(){
     });
 };
 
-var topicPage = {
+var topicPageComp = {
     controller:function(){
         var self= this;
         this.description = m.prop('');
@@ -131,23 +110,19 @@ var topicPage = {
             if (description) {
                 list.push({topictitle: description});
                 self.description("");
-                // m.redraw(true)
-                // m.startComputation()
-                //     // callback()
-                // m.endComputation()
             }
         };
     },
     view:function(controller) {
 
-        var list = m.component(listComp, {parent: controller});
+        var list = m.component(topicListComp, {parent: controller});
 
-        return m("div", [
-            m("input", {onchange: m.withAttr("value", controller.description), value: controller.description()}),
-            m("button", {onclick: function(){controller.add()}}, "Add"),
-            m("div",'---'),
-            m.component(listComp, controller),
-            m("div",'---'),
+        return m("div", {class:['page topicPageComp'].join(' ')}, [
+            m("div",{class:"pageHeader"},[
+                m("input", {onchange: m.withAttr("value", controller.description), value: controller.description()}),
+                m("button", {onclick: function(){controller.add()}}, "Add"),
+            ]),
+            m.component(topicListComp, controller),
             
             m("#container", {config: fadesIn}, [
                 m("a[href='/foo']", {config: fadesOutPage}, "go to foo")
@@ -155,8 +130,7 @@ var topicPage = {
         ])
     }
 };
-var once = true;
-var listComp = {
+var topicListComp = {
     controller: function(parentCtrl){
         var self = this;
         this.listx = parentCtrl.listx;
@@ -174,70 +148,145 @@ var listComp = {
         };
     },
     view: function(ctrl) {
-        return m("div", ctrl.listx().map(function(item, index){
+        return m("div",{'class':'topicList'}, ctrl.listx().map(function(item, index){
             return [
-                m('div',[
-                    m("span", {
-                        // 'id': item.mId + 'delete', //hack to override diffing fade out item splice bug.
-                        onclick: function(e){
-                            fadesOut(e,function(){
-                                ctrl.remove(e,item)
-                            })
-                        }
-                    }, "delete ---- "),
-                    m("span",item.topictitle),
-                    m("span",item.responses ? item.responses.length : '')
-                ]),
-                m.component(responsesComp, item.responses),
+                m('div',{'class':'topicContainer'},[
+                    m('div',{'class':'topicHeader'},[
+                        m("span", {
+                            // 'id': item.mId + 'delete', //hack to override diffing fade out item splice bug.
+                            onclick: function(e){
+                                fadesOut(e,function(){
+                                    ctrl.remove(e,item)
+                                })
+                            }
+                        }, "delete ---- "),
+                        m("span",item.topictitle)
+                    ]),
+                    m.component(responseListComp, item.responses),
+                ])
             ]
 
         }))
     }
 };
 
-function appendDOM( dom ){
-  return function( el, init ){
-    if( !init ) el.innerHTML = ( dom );
-  };
-};
 
-var responsesComp = {
+
+var responseListComp = {
     controller: function(responses){
         var self = this;
         this.listx = m.prop(responses);
     },
     view: function(ctrl) {
-        return m("div", {class:'asdfasdfa'}, ctrl.listx().map(function(item, index){
-            // return m("div",'ddddd')
-            return m.component(responseItemComp, item);
-            
-            
-
+        return m("div", {class:'responseList'}, ctrl.listx().map(function(item, index){
+            return m.component(responseContainerComp, item);
         }))
     }
 };
 
-var responseItemComp = {
+var responseContainerComp = {
     controller:function(item){
+        var self = this;
         this.item = item;
+        this.showResponses = true;
+        this.showHide = function(){
+            self.showResponses = !self.showResponses;
+        }
     },
     view: function(ctrl){
-        var indent = '';
-        for(var i=0,l=ctrl.item.depth;i<l;i++){
-            indent += '- '
+
+        var inner = [];
+        inner.push(m.component(responseItemComp, ctrl))
+
+        inner.push(
+            m(
+                'form',
+                {
+                    'class':'addResponseForm clearfix',
+                    'config':function(el, isInitialized,context,mObj){
+                        if(!isInitialized){
+                            var $el = $(el);
+                            var $textarea = $el.closest('form').find('textarea');
+                            $el.on('submit',function(e){
+                                e.preventDefault();
+                                var inputValue = $textarea.val();
+                                if(inputValue.length > 0){
+                                    m.redraw.strategy('all');//all,diff,none
+                                    ctrl.item.responses = ctrl.item.responses ? ctrl.item.responses : [];
+                                    ctrl.item.responses.unshift({
+                                        age:1,
+                                        author:'me',
+                                        id:++discussionId,
+                                        parentid:ctrl.item.id,
+                                        posttext: '<p>'+$textarea.val()+'</p>'
+                                    })
+
+                                    console.log(typeof $textarea.val())
+                                    m.redraw(true)
+                                    m.redraw.strategy('diff');
+                                }
+                            })
+
+                            context.onunload = function() {
+                                $el.remove();
+                            }
+                        }
+                        console.log(isInitialized)
+                    }
+                },
+                [
+                    m('button',{'type':'submit','class':'addResponseSubmitButton'},'post'),
+                    m('div',{'class':'inputWrap'},[
+                        m('textarea',{
+                            'class':'addResponseInput',
+                            'placeholder':'add response',
+                        })
+                    ])
+                ]
+            )
+        )
+
+        if(ctrl.item.responses){
+            inner.push(m( 'div', {
+                'class':'showHide',
+                'onclick':function(){
+                    ctrl.showHide()
+                }
+            }, (ctrl.showResponses ? '[--] hide' : '[+] show')  + ' responses'))
+        } else {
+            inner.push(m( 'div', {'class':'showHide noResponses'}, 'no responses'))
         }
 
-        var responseItem = [
-            m("span",indent+ctrl.item.id),
-            m("span",' '+ctrl.item.author),
-            m( 'span', { config : appendDOM( ctrl.item.posttext ) } )
-        ];
-        if(ctrl.item.responses){
-            responseItem.push(m.component(responsesComp, ctrl.item.responses));
+
+        if(ctrl.item.responses && ctrl.showResponses){
+            inner.push(m.component(responseListComp, ctrl.item.responses));
         }
-        return  m('div',[
-                responseItem,
-            ])
+
+        return  m('div', {
+            'class':[
+                'responseContainer',
+                'indent',
+                'indent_'+ctrl.item.depth
+            ].join(' ')
+        },inner);
+    }
+};
+
+var responseItemComp = {
+    controller:function(parentCtrl){
+        this.item = parentCtrl.item;
+        this.parentCtrl = parentCtrl;
+    },
+    view: function(ctrl){
+        var responseItem = [
+            m('div',{'class':'responseHeader'},[
+                m("span",{'class':'author'}, ' '+ctrl.item.author),
+                m("span",{'class':'ago'}, ctrl.item.age+ ' '+dateToAgoString(ctrl.item.age))
+            ]),
+            m( 'div', {'class':'responseBody', config : appendDOM( ctrl.item.posttext ) } ),
+            
+        ];
+        return m('div',{'class':['responseItem','responseItem_indent_'+ctrl.item.depth].join(' ')},responseItem)
     }
 };
 
@@ -249,7 +298,7 @@ $(function(){
     // m.mount(document.body, {controller:Controller, view: view});
     m.route.mode = "hash";
     m.route($('#app')[0], "/", {
-        "/": (topicPage),
+        "/": (topicPageComp),
         // "/": slidingPage({controller: new Controller().controller, view: view}),
         // "/foo": slidingPage({controller:newController, view: view2}),
         // "/dashboard": slidingPage({controller:Controller, view: view}),
