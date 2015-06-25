@@ -160,8 +160,6 @@ var topicPage = {
 var listComp = {
     controller: function(parentCtrl){
         var self = this;
-        console.log(parentCtrl)
-        this.asdf = "qwer";
         this.listx = parentCtrl.listx;
         this.description = parentCtrl.description;
 
@@ -174,8 +172,6 @@ var listComp = {
                 }
             }
         };
-
-        
     },
     view: function(ctrl) {
         console.log(ctrl.listx())
@@ -190,7 +186,44 @@ var listComp = {
                             })
                         }
                     }, "delete ---- "),
-                    m("span",item.topictitle)
+                    m("span",item.topictitle),
+                    m("span",item.responses ? item.responses.length : '')
+                ]),
+                m.component(responsesComp, item.responses),
+            ]
+
+        }))
+    }
+};
+
+var responsesComp = {
+    controller: function(responses){
+        var self = this;
+        this.listx = m.prop(responses);
+    },
+    view: function(ctrl) {
+        console.log(ctrl.listx())
+        return m("div", ctrl.listx().map(function(item, index){
+            console.log(
+                item.age,
+                item.author,
+                item.posttext
+            )
+            var tabs = '';
+            for(var i=0,l=item.depth;i<l;i++){
+                tabs += '- '
+            }
+
+            var responseItem = [
+                m("span",tabs+item.id),
+            ];
+            if(item.responses){
+                responseItem.push(m.component(responsesComp, item.responses));
+            }
+
+            return [
+                m('div',[
+                    responseItem,
                 ])
             ]
 
