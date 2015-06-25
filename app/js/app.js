@@ -1,52 +1,5 @@
 var mId = 0;
 
-var appendDOM = function( dom ){
-  return function( el, init ){
-    if( !init ) el.innerHTML = ( dom );
-  };
-};
-
-var dateToAgoString = function(datex) {//datex can be date obj or string/number seconds ago.
-    if(typeof datex !== 'object'){
-        datex = +datex;
-        var seconds = datex;
-        var dateNow = new Date();
-        var dateSecondsAgo = new Date(dateNow.getTime() - seconds*1000);
-        datex = dateSecondsAgo;
-    }
-    var strings = [];
-    var delta = (Math.abs(new Date() - datex) / 1000);
-
-    // calculate (and subtract) whole days
-    var days = Math.floor(delta / 86400);
-    delta -= days * 86400;
-    if (days > 0) {
-        strings.push(days + ' days,')
-    }
-
-    // calculate (and subtract) whole hours
-    var hours = Math.floor(delta / 3600) % 24;
-    delta -= hours * 3600;
-    if (hours > 0) {
-        strings.push(hours + 'h')
-    }
-
-    // calculate (and subtract) whole minutes
-    var minutes = Math.floor(delta / 60) % 60;
-    delta -= minutes * 60;
-    if (minutes > 0) {
-        strings.push(minutes + 'm')
-    }
-
-    if (strings.length === 0) {
-        strings.push(1 + 'm')
-    }
-
-    var result = strings.join(' ') + ' ago';
-    return result;
-};
-
-
 
 
 var view2 = function(controller) {
@@ -61,46 +14,58 @@ var view2 = function(controller) {
 //-=-=-=-=-=-=-=-=-=-=-=-
 
 
-var discussionId = 0;
-var fetch = function(){
-    return m.request({method: "GET", url: "discussion.json"})
-    .then(function(response){
-        if(response && response.topics){
-            var topics = response.topics;
-            for(var i=0,l=topics.length;i<l;i++){
-                var topic = topics[i];
-                var responses = topic.responses ? topic.responses : [];
-                var responseDict = {};
-                for(var j=0,m=responses.length;j<m;j++){
-                    discussionId = responses[j].id > discussionId ? responses[j].id : discussionId;
-                    var response = responses[j];
-                    var id = response.id;
-                    responseDict[id] = response;
-                    var parentid = response.parentid;
-                    if(typeof responseDict[parentid] !== 'undefined'){
-                        responseDict[parentid].responses = responseDict[parentid].responses ? responseDict[parentid].responses : [];
-                        responseDict[parentid].responses.push(response);
-                        responses.splice(j,1);
-                        m--;
-                        j--;
+var discussionService = (function(){
+    var Service = function(){
+        this.discussionId = 0;
+        this.hasData = false;
+        this.mProp = this.fetch();
+    };
+    Service.prototype.fetch = function(){
+        var self = this;
+        return m.request({method: "GET", url: "discussion.json"})
+        .then(function(response){
+            if(response && response.topics){
+                var topics = response.topics;
+                for(var i=0,l=topics.length;i<l;i++){
+                    var topic = topics[i];
+                    var responses = topic.responses ? topic.responses : [];
+                    var responseDict = {};
+                    for(var j=0,m=responses.length;j<m;j++){
+                        self.discussionId = responses[j].id > self.discussionId ? responses[j].id : self.discussionId;
+                        var response = responses[j];
+                        var id = response.id;
+                        responseDict[id] = response;
+                        var parentid = response.parentid;
+                        if(typeof responseDict[parentid] !== 'undefined'){
+                            responseDict[parentid].responses = responseDict[parentid].responses ? responseDict[parentid].responses : [];
+                            responseDict[parentid].responses.push(response);
+                            responses.splice(j,1);
+                            m--;
+                            j--;
+                        }
                     }
                 }
+                // console.log(topics)
+                // var str = JSON.stringify(topics, null, 2);
+                // console.log(str);
+                this.hasData = true;
+                return topics;
+            } else {
+                return response;
             }
-            // console.log(topics)
-            // var str = JSON.stringify(topics, null, 2);
-            // console.log(str);
-            return topics;
-        } else {
-            return response;
-        }
-    });
-};
+        });
+    };
+
+    return new Service();
+})();
+
+
 
 var topicPageComp = {
     controller:function(){
         var self= this;
         this.description = m.prop('');
-        this.listx = fetch();
+        this.listx = discussionService.mProp;
         
 
         this.add = function(event,text){
@@ -216,12 +181,12 @@ var responseContainerComp = {
                                     ctrl.item.responses.unshift({
                                         age:1,
                                         author:'me',
-                                        id:++discussionId,
+                                        id:++discussionService.discussionId,
                                         parentid:ctrl.item.id,
-                                        posttext: '<p>'+$textarea.val()+'</p>'
+                                        posttext: '<p>'+$textarea.val()+'</p>',
+                                        fresh:true
                                     })
 
-                                    console.log(typeof $textarea.val())
                                     m.redraw(true)
                                     m.redraw.strategy('diff');
                                 }
@@ -231,7 +196,6 @@ var responseContainerComp = {
                                 $el.remove();
                             }
                         }
-                        console.log(isInitialized)
                     }
                 },
                 [
@@ -263,6 +227,68 @@ var responseContainerComp = {
         }
 
         return  m('div', {
+            'config':function(el, isInitialized,context,mObj){
+                var item = mObj.controllers[0].item;
+                if(item.fresh){
+                    delete item.fresh;
+
+                    //get element dimensions without shifting layout
+                    var $el = $(el);
+                    var $parent = $el.parent();
+                    $parent.css({
+                        'position':'relative'
+                    });
+                    $el.css({
+                        'opacity':0,
+                        'position':'absolute',
+                        'width':'100%',
+                        '-webkit-box-sizing':'border-box',
+                        '-moz-box-sizing':'border-box',
+                        'box-sizing':'border-box'
+
+                    });
+                    var itemWidth = $el.outerWidth();
+                    var itemHeight = $el.outerHeight();
+                    
+                    var $beneath = $el.parents();
+                    $beneath = $beneath.nextAll();
+                    $beneath = $beneath.add($el.nextAll())
+
+                    setTimeout(function(){                        
+                        $beneath.css({
+                            '-webkit-transform':'translate3d(0, '+ (-itemHeight) +'px, 0)',
+                            '-moz-transform':'translate3d(0, '+ (-itemHeight) +'px, 0)',
+                            '-ms-transform':'translate3d(0, '+ (-itemHeight) +'px, 0)',
+                            'transform':'translate3d(0, '+ (-itemHeight) +'px, 0)'
+                        })
+                        $el.css({
+                            'opacity':'',
+                            'position':'',
+                            'width':'',
+                            '-webkit-box-sizing':'',
+                            '-moz-box-sizing':'',
+                            'box-sizing':''
+                        });
+                        $parent.css({
+                            'position':''
+                        });
+                        $beneath.velocity({
+                            translateY:[0,-itemHeight]
+                        },{
+                            duration: 1500,
+                            easing: "spring",
+                            complete: function(){
+                                $beneath.css({
+                                    '-webkit-transform':'',
+                                    '-moz-transform':'',
+                                    '-ms-transform':'',
+                                    'transform':'',
+                                })
+                            },
+                        })
+                    },0);
+                }
+            },
             'class':[
                 'responseContainer',
                 'indent',
@@ -280,10 +306,11 @@ var responseItemComp = {
     view: function(ctrl){
         var responseItem = [
             m('div',{'class':'responseHeader'},[
+                m("span",{'class':'authorLabel'}, 'By: '),
                 m("span",{'class':'author'}, ' '+ctrl.item.author),
-                m("span",{'class':'ago'}, ctrl.item.age+ ' '+dateToAgoString(ctrl.item.age))
+                m("span",{'class':'ago'}, utility.toAgoString(ctrl.item.age))
             ]),
-            m( 'div', {'class':'responseBody', config : appendDOM( ctrl.item.posttext ) } ),
+            m( 'div', {'class':'responseBody', config : utility.appendDOM( ctrl.item.posttext ) } ),
             
         ];
         return m('div',{'class':['responseItem','responseItem_indent_'+ctrl.item.depth].join(' ')},responseItem)

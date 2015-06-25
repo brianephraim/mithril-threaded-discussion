@@ -58,10 +58,14 @@ body, html {
 
 .topicHeader {
   padding: 15px;
-  font-size: 20px; }
+  font-size: 20px;
+  background: white; }
 
 .topicContainer {
   border-bottom: 3px solid #3F5765; }
+
+.responseContainer {
+  background: white; }
 
 .responseItem {
   border-top: 3px solid #BDD4DE;
