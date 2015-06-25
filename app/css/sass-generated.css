@@ -69,9 +69,13 @@ body, html {
   margin: 0 auto; }
 
 .topicHeader {
-  padding: 15px;
   font-size: 20px;
-  background: white; }
+  background: white;
+  padding: 15px; }
+  @media screen and (max-width: 800px) {
+    .topicHeader {
+      padding: 5px;
+      background: red; } }
 
 .topicContainer {
   border-bottom: 3px solid #3F5765; }
@@ -82,9 +86,15 @@ body, html {
 .responseItem {
   border-top: 3px solid #BDD4DE;
   padding: 15px; }
+  @media screen and (max-width: 800px) {
+    .responseItem {
+      padding: 5px; } }
 
 .responseBody p {
   padding-bottom: 15px; }
+  @media screen and (max-width: 800px) {
+    .responseBody p {
+      padding-bottom: 5px; } }
 
 .inputWrap {
   overflow: hidden; }
@@ -96,9 +106,12 @@ body, html {
   border-top: 1px solid #96A8B0;
   background: transparent;
   min-width: 100%;
-  padding: 15px;
   font-size: 14px;
-  color: #96A8B0; }
+  color: #96A8B0;
+  padding: 15px; }
+  @media screen and (max-width: 800px) {
+    .addResponseInput {
+      padding: 5px; } }
 
 .addResponseSubmitButton {
   font-size: 14px;
@@ -108,18 +121,27 @@ body, html {
   color: white;
   position: relative;
   padding: 15px; }
+  @media screen and (max-width: 800px) {
+    .addResponseSubmitButton {
+      padding: 5px; } }
 
 .responseItem_indent_0 {
   border-top: none; }
 
 .responseHeader {
   padding-bottom: 15px; }
+  @media screen and (max-width: 800px) {
+    .responseHeader {
+      padding-bottom: 5px; } }
 
 .showHide {
   color: #96A8B0;
   font-size: 12px;
   cursor: pointer;
   padding: 0 15px 15px 30px; }
+  @media screen and (max-width: 800px) {
+    .showHide {
+      padding: 0 5px 5px 10px; } }
 
 .noResponses {
   color: #EFEFEF; }
@@ -135,11 +157,17 @@ body, html {
 
 .indent {
   padding-left: 30px; }
+  @media screen and (max-width: 800px) {
+    .indent {
+      padding-left: 10px; } }
 
 .indent_0 {
   padding-left: 0; }
 
 .indent_1 {
   padding-left: 30px; }
+  @media screen and (max-width: 800px) {
+    .indent_1 {
+      padding-left: 10px; } }
 
 /*# sourceMappingURL=sass-generated.css.map */

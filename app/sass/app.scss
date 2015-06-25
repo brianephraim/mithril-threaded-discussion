@@ -67,6 +67,8 @@ $grey1: #3F5765;
 $grey2: #2B3A42;
 
 $indent: 15px;
+$indent-small: 5px;
+$break-small:800px;
 
 
 .pageHeader{
@@ -88,9 +90,13 @@ body,html {
     margin:0 auto;
 }
 .topicHeader{
-    padding: $indent;
     font-size:20px;
     background:white;
+    padding: $indent;
+    @media screen and (max-width: $break-small) {
+        padding: $indent-small;
+        background:red;
+    }
 }
 
 .topicContainer{
@@ -103,9 +109,15 @@ body,html {
 .responseItem{
     border-top:3px solid $light2;
     padding: $indent;
+    @media screen and (max-width: $break-small) {
+        padding: $indent-small;
+    }
 }
 .responseBody p {
     padding-bottom: $indent;
+    @media screen and (max-width: $break-small) {
+        padding-bottom: $indent-small;
+    }
 }
 
 .inputWrap{
@@ -118,9 +130,12 @@ body,html {
     border-top:1px solid $light3;
     background: transparent;
     min-width:100%;
-    padding: $indent;
     font-size:14px;
     color:$light3;
+    padding: $indent;
+    @media screen and (max-width: $break-small) {
+        padding: $indent-small;
+    }
 
 }
 .addResponseSubmitButton{
@@ -131,6 +146,9 @@ body,html {
     color:white;
     position:relative;
     padding:$indent;
+    @media screen and (max-width: $break-small) {
+        padding: $indent-small;
+    }
 }
 
 .responseItem_indent_0{
@@ -138,12 +156,18 @@ body,html {
 }
 .responseHeader{
     padding-bottom:$indent;
+    @media screen and (max-width: $break-small) {
+        padding-bottom: $indent-small;
+    }
 }
 .showHide{
     color: $light3;
     font-size:12px;
     cursor: pointer;
     padding: 0 $indent $indent ($indent * 2);
+    @media screen and (max-width: $break-small) {
+        padding: 0 $indent-small $indent-small ($indent-small * 2);
+    }
 }
 .noResponses{
     color: $light1;
@@ -160,10 +184,16 @@ body,html {
 
 .indent{
     padding-left:$indent * 2;
+    @media screen and (max-width: $break-small) {
+        padding-left:$indent-small * 2;
+    }
 }
 .indent_0{
     padding-left:0;
 }
 .indent_1{
     padding-left:$indent * 2;
+    @media screen and (max-width: $break-small) {
+        padding-left:$indent-small * 2;
+    }
 }
