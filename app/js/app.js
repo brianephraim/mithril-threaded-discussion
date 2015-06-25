@@ -35,7 +35,6 @@ var fadesIn = function(element, isInitialized, context) {
 var fadesOut = function(e,callback) {
     // return function(e) {
         //don't redraw yet
-        console.log('x')
         m.redraw.strategy("none")
 
         $.Velocity(e.target, {opacity: 0}, {
@@ -156,7 +155,7 @@ var topicPage = {
         ])
     }
 };
-
+var once = true;
 var listComp = {
     controller: function(parentCtrl){
         var self = this;
@@ -164,6 +163,7 @@ var listComp = {
         this.description = parentCtrl.description;
 
         this.remove = function(event,item){
+            m.redraw.strategy('all');//all,diff,none
             var list = self.listx();
             for(var i=0,l=list.length;i<l;i++){
                 if(list[i] === item){
@@ -174,7 +174,6 @@ var listComp = {
         };
     },
     view: function(ctrl) {
-        console.log(ctrl.listx())
         return m("div", ctrl.listx().map(function(item, index){
             return [
                 m('div',[
@@ -196,38 +195,49 @@ var listComp = {
     }
 };
 
+function appendDOM( dom ){
+  return function( el, init ){
+    if( !init ) el.innerHTML = ( dom );
+  };
+};
+
 var responsesComp = {
     controller: function(responses){
         var self = this;
         this.listx = m.prop(responses);
     },
     view: function(ctrl) {
-        console.log(ctrl.listx())
-        return m("div", ctrl.listx().map(function(item, index){
-            console.log(
-                item.age,
-                item.author,
-                item.posttext
-            )
-            var tabs = '';
-            for(var i=0,l=item.depth;i<l;i++){
-                tabs += '- '
-            }
-
-            var responseItem = [
-                m("span",tabs+item.id),
-            ];
-            if(item.responses){
-                responseItem.push(m.component(responsesComp, item.responses));
-            }
-
-            return [
-                m('div',[
-                    responseItem,
-                ])
-            ]
+        return m("div", {class:'asdfasdfa'}, ctrl.listx().map(function(item, index){
+            // return m("div",'ddddd')
+            return m.component(responseItemComp, item);
+            
+            
 
         }))
+    }
+};
+
+var responseItemComp = {
+    controller:function(item){
+        this.item = item;
+    },
+    view: function(ctrl){
+        var indent = '';
+        for(var i=0,l=ctrl.item.depth;i<l;i++){
+            indent += '- '
+        }
+
+        var responseItem = [
+            m("span",indent+ctrl.item.id),
+            m("span",' '+ctrl.item.author),
+            m( 'span', { config : appendDOM( ctrl.item.posttext ) } )
+        ];
+        if(ctrl.item.responses){
+            responseItem.push(m.component(responsesComp, ctrl.item.responses));
+        }
+        return  m('div',[
+                responseItem,
+            ])
     }
 };
 
