@@ -11,9 +11,6 @@ var view2 = function(controller) {
     ]);
 };
 
-//-=-=-=-=-=-=-=-=-=-=-=-
-
-
 var discussionService = (function(){
     var Service = function(){
         this.discussionId = 0;
@@ -229,6 +226,8 @@ var responseContainerComp = {
         return  m('div', {
             'config':function(el, isInitialized,context,mObj){
                 var item = mObj.controllers[0].item;
+
+                // only do animation on new items
                 if(item.fresh){
                     delete item.fresh;
 
@@ -250,17 +249,22 @@ var responseContainerComp = {
                     var itemWidth = $el.outerWidth();
                     var itemHeight = $el.outerHeight();
                     
+                    //get items beneath... nesting makes this complicated.
                     var $beneath = $el.parents();
                     $beneath = $beneath.nextAll();
                     $beneath = $beneath.add($el.nextAll())
 
-                    setTimeout(function(){                        
+                    //make sure dom manipulation is ready
+                    setTimeout(function(){
+                        // prep the animation                   
                         $beneath.css({
                             '-webkit-transform':'translate3d(0, '+ (-itemHeight) +'px, 0)',
                             '-moz-transform':'translate3d(0, '+ (-itemHeight) +'px, 0)',
                             '-ms-transform':'translate3d(0, '+ (-itemHeight) +'px, 0)',
                             'transform':'translate3d(0, '+ (-itemHeight) +'px, 0)'
                         })
+
+                        // reset earlier styles
                         $el.css({
                             'opacity':'',
                             'position':'',
@@ -272,12 +276,15 @@ var responseContainerComp = {
                         $parent.css({
                             'position':''
                         });
+
+                        // do the animation
                         $beneath.velocity({
                             translateY:[0,-itemHeight]
                         },{
                             duration: 1500,
                             easing: "spring",
                             complete: function(){
+                                // reset styles
                                 $beneath.css({
                                     '-webkit-transform':'',
                                     '-moz-transform':'',
@@ -322,7 +329,7 @@ var responseItemComp = {
 
 //initialize the application
 $(function(){
-    // m.mount(document.body, {controller:Controller, view: view});
+    m.mount(document.body, topicPageComp);
     m.route.mode = "hash";
     m.route($('#app')[0], "/", {
         "/": (topicPageComp),
